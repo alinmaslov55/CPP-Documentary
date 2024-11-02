@@ -1,0 +1,10 @@
+To include:
+Threads
+
+
+VTable 
+SMart Pointers
+Operator Overloading - to implement something
+
+To do:
+- implement Singleton
