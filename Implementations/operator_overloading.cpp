@@ -42,6 +42,8 @@ class Matrix{
     friend std::ostream& operator<<(std::ostream& os, const Matrix<U> &some);
     template<typename U>
     friend Matrix<U> operator+(const Matrix<U> &first, const Matrix<U> &some);
+    template<typename U>
+    friend Matrix<U> operator-(const Matrix<U> &first, const Matrix<U> &some);
     ~Matrix(){
         for(int i = 0; i < rows; i++){
             delete[] data[i];
@@ -50,6 +52,20 @@ class Matrix{
     }
 };
 
+template<typename U>
+Matrix<U> operator-(const Matrix<U> &first, const Matrix<U> &some){
+    if(first.rows!= some.rows || first.cols!= some.cols){
+        std::cerr << "Matrices must have the same dimensions" << std::endl;
+        return Matrix<U>(0, 0);
+    }
+    Matrix<U> result(first.rows, first.cols);
+    for(int i = 0; i < first.rows; ++i){
+        for(int j = 0; j < first.cols; ++j){
+            result.data[i][j] = first.data[i][j] - some.data[i][j];
+        }
+    }
+    return result;
+}
 template<typename U>
 Matrix<U> operator+(const Matrix<U> &first, const Matrix<U> &some){
     if(first.rows!= some.rows || first.cols!= some.cols){
@@ -83,6 +99,6 @@ int main(){
 
     std::cout << matrix2 << std::endl;
 
-    std::cout << matrix1 + matrix2 << std::endl;
+    std::cout << matrix1 - matrix2 << std::endl;
     return 0;
 }
