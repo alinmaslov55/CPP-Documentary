@@ -651,3 +651,374 @@ static Singleton& getInstance(){
     return instance;
 }
 ```
+
+## Parantheses and Curly braces for std::initializer_list
+
+### Parantheses ```()```
+
+- **Direct Initialization** - Parentheses are used for *direct initialization*, which resembles a function call.
+- **Narrowing Conversions Allowed** - If you use parentheses, narrowing conversions (like converting a ```double``` to an ```int```) are allowed.
+- **Ambiguity** - In some cases, especially with single-element initializations, parentheses can be ambiguous (e.g., ```std::vector<int> v(10, 5);``` is a vector of ten elements with each initialized to 5, whereas ```std::vector<int> v{10, 5};``` would initialize a vector with two elements: 10 and 5).
+
+```cpp
+int x(5);      // Initializes x to 5
+double y(3.14); // Direct initialization of y with 3.14
+```
+
+### Curly Braces ```{}```
+
+- **Uniform Initialization (Brace Initialization)** - Introduced in C++11, brace initialization enforces *uniform initialization* and is preferred as it avoids ambiguity.
+- **No Narrowing Conversions** - With curly braces, narrowing conversions are not allowed. For example, trying to initialize an ```int``` with a ```double``` using ```{}``` will cause a compile-time error.
+- **Aggregate Initialization** - For structs, arrays, or classes without constructors, ```{}``` will aggregate-initialize the members directly.
+- **```std::initializer_list```** - For standard library containers (e.g., ```std::vector```), ```{}``` may use an ```initializer_list``` constructor if available.
+
+```cpp
+int x{5};       // Initializes x to 5 (uniform initialization)
+int y{3.14};    // Error: narrowing conversion
+std::vector<int> v{1, 2, 3}; // Initializes a vector with elements 1, 2, 3
+```
+
+### Summary of Paranthesies and Curly Braces
+
+- **()** - Direct initialization, allows narrowing conversions, can be ambiguous in some contexts.
+- **{}** - Uniform initialization, disallows narrowing conversions, preferred for initializing containers and aggregate types.
+
+## Composition and Aggregation
+
+| Aspect | Composition | Aggregation |
+|-|-|-|
+| Ownership | Strong (the "whole" owns the "part") | Weak (the "whole" holds a reference to the "part") |
+| Lifetime | The "part" depends on the "whole" | The "part" is independent of the "whole" |
+| Example | Car and Engine (if Car dies, Engine dies) | Library and Book (books can exist without Library) |
+
+### Composition
+
+- Composition is a strong form of association where one object (the "whole") owns another object (the "part") and is responsible for its lifespan.
+
+```cpp
+class Engine {
+public:
+    Engine() { /* initialize engine */ }
+    // Engine-specific functionality
+};
+
+class Car {
+private:
+    Engine engine; // Engine is part of Car (composition)
+public:
+    Car() : engine() { /* initialize car */ }
+    // Car-specific functionality
+};
+```
+
+### Aggregation
+
+- Aggregation is a weaker association than composition. It represents a "has-a" relationship where the "whole" can access the "part," but it does not own it.
+
+```cpp
+class Book {
+public:
+    Book() { /* initialize book */ }
+    // Book-specific functionality
+};
+
+class Library {
+private:
+    std::vector<Book*> books; // Aggregation, Library doesn't own the books
+public:
+    void addBook(Book* book) {
+        books.push_back(book);
+    }
+    // Library-specific functionality
+};
+```
+
+## Pointer to Implementation in Classes
+
+- Design pattern in C++ "PImpl"
+- Used to separate the interface and implementation details o a class
+
+### How it works
+
+1. **Define the Interface** - In the header file, you declare your class with only the public methods and a private pointer to the implementation (often a ```std::unique_ptr``` or raw pointer).
+2. **Implement the Details** - In the ```.cpp``` file, you define the actual data members and private methods in a separate ```Impl``` struct or class.
+3. **Encapsulate with a Pointer** - The class in the header file only needs to manage a pointer to the ```Impl``` class and define methods that forward calls to ```Impl``` methods.
+
+### Example
+
+```cpp
+// MyClass.h
+#include <memory>
+
+class MyClass {
+public:
+    MyClass();
+    ~MyClass();
+
+    void someMethod();
+    // other public methods
+
+private:
+    // Forward declare the implementation class and use a pointer
+    struct Impl;
+    std::unique_ptr<Impl> pImpl;
+};
+```
+
+```cpp
+// MyClass.cpp
+#include "MyClass.h"
+
+// Define the hidden implementation
+struct MyClass::Impl {
+    void someMethodImpl() {
+        // Do something meaningful here
+    }
+};
+
+MyClass::MyClass() : pImpl(std::make_unique<Impl>()) {}
+
+MyClass::~MyClass() = default;
+
+void MyClass::someMethod() {
+    pImpl->someMethodImpl();  // Forward to the actual implementation
+}
+```
+
+### Advantages
+
+- **Improves Encapsulation** - The implementation details are hidden from users of the class, so they can't directly access internal data.
+- **Reduces Compile-Time Dependencies** - Changes to private members in the implementation won’t require recompilation of the header, which speeds up compilation time.
+- **Binary Compatibility** - Since clients only depend on the interface, you can change the implementation in binary libraries without breaking clients.
+
+### Disadvantages
+
+- **Overhead** - Using a pointer introduces a level of indirection, which has a minor performance cost, though this is usually negligible.
+- **Complexity** - This pattern introduces more files and indirection, which can complicate the code structure.
+
+### When to use Pimpl?
+
+- You want to hide complex implementation details from the interface.
+- You want to reduce compile-time dependencies and improve encapsulation.
+- You’re developing a stable API, and you expect to frequently change implementation details without impacting users.
+
+## ```STATIC```
+
+### Outside Classes
+
+1. Static Variables in GLobal Scopes
+
+    - A static variable defined outside of any function or class in a ```.cpp``` file has file scope (internal linkage). This variable is limited to the file it’s defined in, meaning it cannot be accessed from other files in the project. For example:
+
+    ```cpp
+    // file1.cpp
+    #include <iostream>
+
+    static int counter = 0;  // Only accessible in file1.cpp
+
+    void incrementCounter() {
+        ++counter;
+        std::cout << "Counter: " << counter << std::endl;
+    }
+    ```
+
+    - If you try to use ```counter``` in another file, it will not be visible, providing a way to limit the scope of variables to individual files.
+
+2. Static Functions
+
+    - Similarly, static functions defined in the global scope are only visible within the file they are defined in. This can be useful for helper functions that should not be accessible from other files.
+
+    ```cpp
+    // file1.cpp
+    static void helperFunction() {
+        std::cout << "This is a static helper function" << std::endl;
+    }
+    ```
+
+    - In this example, helperFunction can only be called within file1.cpp. If you try to call it from another file, the linker will not recognize it, keeping the function private to its file.
+
+#### Importance of static outside classes
+
+- **Encapsulation** - By marking variables and functions static, you keep them private to the file, preventing unintended access from other parts of the code.
+- **Avoid Name Conflicts** - In large projects, many files might define functions or variables with the same name. static prevents name conflicts by ensuring that a name in one file doesn’t clash with a name in another file.
+
+### Inside Classes
+
+1. Static Member Variables
+
+    - A **static member variable** is shared among all instances of the class. Unlike regular member variables, which are specific to each instance, a static member variable has a single memory location shared by all objects of the class.
+
+    ```cpp
+    #include <iostream>
+
+    class Counter {
+    public:
+        static int count;  // Declaration of a static member variable
+
+        Counter() {
+            ++count;
+        }
+
+        static void showCount() {  // Static member function
+            std::cout << "Current count: " << count << std::endl;
+        }
+    };
+
+    // Definition and initialization of the static member variable
+    int Counter::count = 0;
+
+    int main() {
+        Counter a;
+        Counter b;
+        Counter::showCount();  // Accessing static function
+
+        return 0;
+    }
+    ```
+
+    - **Static Member Declaration** - static int count; declares a static variable count in the class. This variable will be shared by all instances of Counter.
+    - **Definition and Initialization** - int Counter::count = 0; defines the static variable outside the class, as it is not tied to a particular object.
+    - **Usage** Since count is shared, each new Counter object increments the same count. The function showCount can access count without requiring an instance.
+
+2. Static Member Functions
+
+- A **static member function** does not have access to ```this```, meaning it can’t access non-static member variables or functions. It can, however, access static member variables and other static member functions.
+
+```cpp
+Counter::showCount();  // Access static function directly through the class
+```
+
+#### Key Points of ```static``` inside classes
+
+- **Accessing Static Members** - You can access static member variables and functions using the class name (e.g., Counter::count) or through an object instance, though using the class name is more typical.
+- **Single Storage** - There is only one copy of each static member variable, regardless of how many objects of the class exist.
+- **No this Pointer** - Static member functions don’t operate on specific instances, so they don’t have access to the this pointer.
+
+#### Use cases for Static Members Inside Classes
+
+- **Counting Instances** - Track the number of objects created.
+- **Shared Configuration** - Store settings that should be common across all instances.
+- **Utility Functions** - Group utility functions within a class, especially if they logically belong to the class but don’t require an instance (like a mathematical helper function in a class).
+
+## Templates
+
+### Template Functions
+
+- Template functions are functions that are defined with a type parameter, allowing them to operate with any data type.
+
+```cpp
+template <typename T>
+T multiply(T a, T b) {
+    return a * b;
+}
+
+/// code
+
+int intResult = multiply(2, 3);         // T is int
+double doubleResult = multiply(2.5, 4.2); // T is double
+
+```
+
+### Multiple Template Parameters
+
+- You can use more than one template parameter by specifying them in a comma-separated list.
+
+```cpp
+template <typename T, typename U>
+void printPair(T a, U b) {
+    std::cout << "First: " << a << ", Second: " << b << std::endl;
+}
+
+//code
+
+printPair(10, 20.5);      // T is int, U is double
+printPair("Hello", 42);   // T is const char*, U is int
+```
+
+### Non-Object Type Parameters
+
+- Templates can take non-type parameters, such as integer values or pointers, which must be compile-time constants.
+
+```cpp
+template <typename T, int size>
+class Array {
+private:
+    T arr[size];
+public:
+    int getSize() { return size; }
+};
+
+// code
+
+Array<int, 5> intArray;
+std::cout << intArray.getSize(); // Outputs 5
+```
+
+### Template Functions FULL and PARTIAL Specialization
+
+- **Full specialization** is when you provide a specific implementation for a specific type.
+
+```cpp
+template <>
+int multiply<int>(int a, int b) {
+    std::cout << "Specialized version for int" << std::endl;
+    return a * b;
+}
+```
+
+- **Partial specialization** applies to class templates and allows specialization for a subset of the template parameters.
+
+```cpp
+template <typename T, typename U>
+class Pair {
+    // Generic implementation
+};
+
+template <typename T>
+class Pair<T, int> {
+    // Specialization when the second type is int
+};
+```
+
+### Variadic Arguments and Variadic Functions
+
+- Variadic templates allow you to create templates that take a variable number of template parameters.
+
+```cpp
+template <typename T, typename... Args>
+void printAll(T first, Args... args) {
+    std::cout << first << " ";
+    if constexpr (sizeof...(args) > 0) {
+        printAll(args...); // Recursively calls with remaining arguments
+    }
+}
+// USAGE:
+
+printAll(1, 2.5, "Hello", 'C'); // Prints: 1 2.5 Hello C
+```
+
+### Template Classes
+
+```cpp
+template <typename T>
+class Stack {
+private:
+    std::vector<T> elements;
+public:
+    void push(T element) { elements.push_back(element); }
+    void pop() { elements.pop_back(); }
+    T top() const { return elements.back(); }
+};
+
+// USAGE
+
+Stack<int> intStack;
+intStack.push(10);
+intStack.push(20);
+std::cout << intStack.top(); // Outputs 20
+
+Stack<std::string> stringStack;
+stringStack.push("Hello");
+stringStack.push("World");
+std::cout << stringStack.top(); // Outputs "World"
+```

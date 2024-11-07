@@ -2,8 +2,7 @@ To include:
 Threads
 
 
-VTable 
-SMart Pointers
+Understand class variable size
 Operator Overloading - to implement something
 
 To do:

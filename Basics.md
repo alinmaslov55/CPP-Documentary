@@ -880,3 +880,104 @@ int main() {
 
 - Use the *copy constructor* when you need to create a new object based on an existing object.
 - Use the *assignment operator* when you want to copy the data from one object to another **already existing** object.
+
+## Multiple Inheritance \(VIRTUAL Inheritance)
+
+### The Diamond Problem
+
+1. ```A``` is the base class
+2. ```B``` and ```C``` both inherit from ```A```
+3. ```D``` inherits from both ```B``` and ```C```
+
+```cpp
+class A {
+public:
+    int value;
+};
+
+class B : public A {
+    // B inherits A
+};
+
+class C : public A {
+    // C inherits A
+};
+
+class D : public B, public C {
+    // D inherits both B and C, so it has two copies of A
+};
+```
+
+- In this structure, ```D``` has two copies of ```A``` (one from ```B``` and one from ```C```). If we try to access value from ```D```, it’s ambiguous which ```A``` instance is being referenced (```B::A``` or ```C::A```).
+
+### Solving Diamond Problem with *Virtual* Inheritance
+
+```cpp
+class A {
+public:
+    int value;
+};
+
+class B : virtual public A {
+    // B inherits A virtually
+};
+
+class C : virtual public A {
+    // C inherits A virtually
+};
+
+class D : public B, public C {
+    // D now has only one instance of A
+};
+```
+
+- With virtual inheritance, both ```B``` and ```C``` inherit ```A``` as a virtual base class, so ```D``` will only have one instance of ```A```. Now, if we access value from an instance of ```D```, it’s unambiguous and refers to the single instance of ```A``` within ```D```.
+
+## In-class Initializers
+
+1. **Code Simplification** - Default values are clearly set within the class definition, which can reduce the need for multiple constructor initializations.
+2. **Consistency** - Ensures that all instances of the class have specific initial values unless explicitly changed.
+3. **Reduces Code Duplication** - Avoids having to repeat default initializations in multiple constructors, making code cleaner and less error-prone.
+
+### Important Considerations
+
+1. **Uniform Initialization** - With in-class initializers, you can use either ```=``` or ```{}``` syntax, which enables *uniform initialization*. For example, ```int x{10};``` is valid and prevents narrowing conversions.
+2. **Static Members** - In-class initializers work for non-static data members only. If you want to initialize a ```static``` member, it must be done outside the class definition
+
+    ```cpp
+    class MyClass {
+    public:
+        static int staticValue; // Declaration only
+    };
+
+    int MyClass::staticValue = 5; // Definition and initialization
+    ```
+
+3. **Interaction with Constructors** - If a constructor’s initializer list explicitly initializes a member, that initialization takes precedence over any in-class initializer for that member.
+
+```cpp
+#include <iostream>
+#include <string>
+
+class User {
+public:
+    std::string name = "Unknown";  // Default name
+    int age = 18;                  // Default age
+
+    User() = default;              // Uses default values
+    User(std::string n, int a) : name(n), age(a) {} // Overridden values
+};
+
+int main() {
+    User user1;                    // name = "Unknown", age = 18
+    User user2("Alice", 25);       // name = "Alice", age = 25
+
+    std::cout << "User1: " << user1.name << ", Age: " << user1.age << '\n';
+    std::cout << "User2: " << user2.name << ", Age: " << user2.age << '\n';
+
+    return 0;
+}
+// OUTPUT:
+// User1: Unknown, Age: 18
+// User2: Alice, Age: 25
+```
