@@ -1022,3 +1022,98 @@ stringStack.push("Hello");
 stringStack.push("World");
 std::cout << stringStack.top(); // Outputs "World"
 ```
+
+## ```**inline**``` Functions
+
+- ```inline``` keyword is used to suggest to the compiler that it should attempt to insert the code of a function directly at the point of the function call, rather than performing the usual function call mechanism (e.g., pushing parameters onto the stack and jumping to the function’s address). This process is called **function inlining**.
+
+### Purpose of Function Inlining
+
+- **Performance Improvement** - Function calls involve overhead (stack operations, jump instructions, etc.). By inlining, the compiler replaces the function call with the actual function code, eliminating the overhead of a call.
+- **Optimization** - Inlining small functions that are called frequently can result in faster execution. However, for larger functions, it may increase code size, which can negate the benefits.
+
+```cpp
+#include <iostream>
+
+inline int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    int result = add(3, 4); // Inline function call
+    std::cout << result << std::endl;  // Outputs: 7
+    return 0;
+}
+```
+
+## ```**inline**``` Variables
+
+- The ```inline``` keyword can also be used with variables in C++, which was introduced in C++17. When used with variables, the inline keyword allows the definition of variables in header files without violating the **One Definition Rule** \(ODR).
+
+### Purpose of inline Variables
+
+- Before C++17, global variables defined in header files had to be marked as ```extern``` to prevent multiple definitions when included in different translation units. C++17 allows variables to be defined as inline, which means they can be defined in header files, and the linker will ensure that there is only one instance of the variable across multiple translation units.
+
+- This is particularly useful for *constant* or *static variables* that need to be shared across multiple translation units without the need for the extern keyword.
+
+```cpp
+// config.h
+#ifndef CONFIG_H
+#define CONFIG_H
+
+inline int global_value = 10;  // Inline variable
+
+#endif
+```
+
+### KeyPoints of inline Variables
+
+1. One Definition Rule (ODR):
+    - Normally, defining a non-constant global variable in a header file can cause multiple definitions across different translation units, which would violate the ODR and result in a linker error.
+    - By marking the variable as inline, the compiler allows the variable to be defined in multiple translation units, but the linker will ensure only one instance of the variable exists in the program.
+2. Use with Constant Data:
+    - inline variables are most commonly used with constants or static data. They can also be used for variables that have a default value but should not be redefined in every translation unit.
+3. Static vs. Inline:
+    - Before C++17, static was used for similar purposes (to limit the variable's scope to a single translation unit). The main difference is that static variables are only visible within the translation unit they are defined, whereas inline variables can be shared across translation units but still guarantee only one definition.
+4. Thread-Local Variables:
+    - inline variables can be used with the thread_local storage class, allowing each thread to have its own instance of the variable.
+
+### Example and Restrictions for inline Variables
+
+```cpp
+// config.h
+#ifndef CONFIG_H
+#define CONFIG_H
+
+inline int global_value = 42;  // Inline variable
+
+#endif
+
+// file1.cpp
+#include "config.h"
+#include <iostream>
+
+void print_value() {
+    std::cout << "File1 value: " << global_value << std::endl;
+}
+
+// file2.cpp
+#include "config.h"
+#include <iostream>
+
+void print_value() {
+    std::cout << "File2 value: " << global_value << std::endl;
+}
+
+// main.cpp
+#include "config.h"
+
+extern void print_value();
+
+int main() {
+    print_value();  // File1 value: 42
+    return 0;
+}
+```
+
+- **Non-constant inline variables** - While ```inline``` variables are allowed for variables that are not ```const```, this is mostly useful when you want a variable to have a shared definition across multiple translation units, such as in a singleton pattern or shared configuration. However, these variables should still adhere to the ODR.

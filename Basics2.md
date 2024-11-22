@@ -352,3 +352,80 @@ int main() {
     return 0;
 }
 ```
+
+## ```Mutable``` keyword
+
+- This is a keyword that overrides ```const``` keyword
+- The mutable keyword in C++ allows modification of a variable captured by value in a lambda function or a non-static data member of a const object. It essentially bypasses the constness of the variable for specific purposes.
+
+### Using ```mutable``` in lambda functions
+
+- By default, lambdas that capture variables by value make them read-only. The mutable keyword allows you to modify these captured variables.
+
+```cpp
+[capture_list](parameters) mutable -> return_type {
+    // Function body
+};
+```
+
+```cpp
+#include <iostream>
+
+int main() {
+    int x = 10;
+
+    auto modifyValue = [x]() mutable {
+        x += 5;
+        std::cout << "Modified x inside lambda: " << x << std::endl;
+    };
+
+    modifyValue(); // Prints: Modified x inside lambda: 15
+    std::cout << "Original x outside lambda: " << x << std::endl; // Prints: 10
+
+    return 0;
+}
+```
+
+- ```x``` is captured by value, so the original variable ```x``` outside the lambda remains unchanged
+- ```mutable``` keyword allows modification of the captured copy of ```x```
+
+### Using ```mutable``` with ```const``` member variables
+
+- In a const object, all member functions treat data members as read-only. The mutable keyword allows specific member variables to bypass this restriction and remain modifiable.
+
+```cpp
+#include <iostream>
+
+class Counter {
+    mutable int count; // Can be modified even in const functions
+public:
+    Counter() : count(0) {}
+
+    void increment() const {
+        ++count; // Allowed because 'count' is mutable
+    }
+
+    int getCount() const {
+        return count;
+    }
+};
+
+int main() {
+    const Counter counter; // const object
+    counter.increment();   // Modifies the mutable member
+    counter.increment();
+
+    std::cout << "Counter: " << counter.getCount() << std::endl; // Prints: 2
+
+    return 0;
+}
+```
+
+### Key points of ```mutable```
+
+1. In Lambdas
+    - Enables modification of variables captured by value
+    - Useful when you need temporary changes without affecting the original variable
+2. In Classes
+    - Allows specific data members to remain modifiable, even in ```const``` objects
+    - Often used for caching, logging, or reference counters
