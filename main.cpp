@@ -1,37 +1,19 @@
 #include <iostream>
-#include <list>
-#include <forward_list>
+#include <algorithm>
+#include <numeric>
 #include <iterator>
-#include <span>
 #include <vector>
 
-
-
-void print(const std::span<int> something);
-
 int main(){
-    std::list<int> DlinkedList = {0, 1, 3, 432, 123, 78, 4545};
+    std::vector<int> line(9);
 
-    DlinkedList.remove_if([](int n){ return (n%2)? true : false; });
+    std::iota(line.begin(), line.end(), 1);
 
-    std::list<int>::iterator hui = DlinkedList.begin();
+    std::reverse(line.begin(), line.end());
 
-    DlinkedList.insert(++hui, 34);
-
-    DlinkedList.erase(hui, DlinkedList.end());
-    std::vector<int> vec(DlinkedList.begin(), DlinkedList.end());
-
-    
-
-    std::span<int> const& something = std::span<int>(vec);
-
-    print(something);
+    for(auto i = line.rbegin(); i != line.rend(); i++){
+        std::cout << *i << std::endl;
+    }
 
     return 0;
-}
-void print(std::span<int> const something) {
-    for(std::span<int>::iterator it = something.begin(); it != something.end(); it++) {
-        std::cout << *it << " ";
-    }
-    std::cout << std::endl;
 }
