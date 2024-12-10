@@ -403,7 +403,7 @@ In C++, There's no separate concept of an "interface" as in other languages. Abs
 - A virtual Destructor is essential when dealing with inheritance, particularly when deleting derived class objects through a base class pointer. Without a virtual destructor, only the base class destructor would be called, potentially, leading to resource leaks or undefined behaviour
 - Virtual Destrcutor ensures that derived class's destructor is called before the base class one, enabling proper clean-up
 
-### WITHOUT VIRTUAL DESCTRUCTOR
+### WITHOUT VIRTUAL DESTRUCTOR
 
 ```cpp
 #include <iostream>
