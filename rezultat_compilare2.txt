@@ -1,0 +1,22 @@
+Introduceti Radio(da - 1/ nu - 0)?
+Dati numeRadio: Dati stare radio (1 - operabil/ 0 - neoperabil): Introduceti Radio(da - 1/ nu - 0)?
+Dati numeRadio: Dati stare radio (1 - operabil/ 0 - neoperabil): Introduceti Radio(da - 1/ nu - 0)?
+Dati numeRadio: Dati stare radio (1 - operabil/ 0 - neoperabil): Introduceti Radio(da - 1/ nu - 0)?
+Dati numeRadio: Dati stare radio (1 - operabil/ 0 - neoperabil): Introduceti Radio(da - 1/ nu - 0)?
+Dati numeRadio: Dati stare radio (1 - operabil/ 0 - neoperabil): Introduceti Radio(da - 1/ nu - 0)?
+------------------------
+AEHC : 1
+AEQE : 0
+AEQK : 1
+AEQK : 1
+AEQP : 0
+------------------------
+------------------------
+AEHC : 1
+AEQK : 1
+AEQK : 1
+------------------------
+------------------------
+AEHC : 1
+AEQK : 1
+------------------------
