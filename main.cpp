@@ -1,24 +1,30 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <mutex>
 
 
+std::mutex mtx;
+static int data = 0;
+void func(){
+    std::lock_guard<std::mutex> lock(mtx);
 
+    data = data + 1;
+
+}
 int main(){
 
-    auto fun = [](int x){
-        std::cout << "Hello from thread: "<< std::this_thread::get_id() << std::endl;
-        std::cout << "Passed argumets is " << x << std::endl;
-    };
+    std::vector<std::thread> threads;
 
-    std::vector<std::thread> more_threads;
-
-    for(int i = 0; i < 10; i++){
-        more_threads.emplace_back(fun, i + 1);
+    for(int i = 0; i < 100; i++){
+        threads.emplace_back(func);
     }
 
-    for(int i = 0; i < 10; i++){
-        more_threads[i].join();
+    for(int i = 0; i < 100; i++){
+        threads[i].join();
     }
+
+    std::cout << "data = " << data << std::endl;
+    
     return 0;
 }

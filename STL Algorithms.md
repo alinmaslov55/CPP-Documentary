@@ -1110,9 +1110,11 @@
             // first - points to the smallest
             // second - points to the largest
             ```
-9.  Numeric Operations
+
+9. Numeric Operations
     - For numerical ranges.
         - ```std::accumulate``` - Sums elements in a range.
+
             ```cpp
             #include <numeric>
             #include <vector>
@@ -1134,7 +1136,9 @@
             // Computes the sum of the elements in a range - default operation is addition
             // operation can be modified by passing a function
             ```
+
         - ```std::inner_product``` - Computes the inner product of two ranges.
+
             ```cpp
             #include <numeric>
             #include <vector>
@@ -1153,7 +1157,9 @@
             // Computes the inner product of two ranges.
             // multiplies corresponding elements from two ranges, sums them up, and optionally applies a custom binary operation
             ```
+
         - ```std::adjacent_difference``` - Computes differences between adjacent elements.
+
             ```cpp
             #include <numeric>
             #include <vector>
@@ -1268,7 +1274,7 @@
 ## Standard Binary Operations (from ```<functional>```)
 
 | Binary Operation | Description | Equivalent Expression |
-|-|-|-| 
+|-|-|-|
 | std::plus<> | Addition | x + y |
 | std::minus<> | Subtraction | x - y |
 | std::multiplies<> | Multiplication | x * y |
