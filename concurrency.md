@@ -277,3 +277,281 @@ int main(){
     return 0;
 }
 ```
+
+### Using ```std::atomic```
+
+- Is a thread-safe wrapper for variables that allows **lock-free** operations on shared data
+- Prevents data races without the need of a **mutex**
+
+1. Provides Atomic (indivisible) operations
+2. Avoids overhead of locking (```std::mutex```)
+3. Used for simple shared variables (```int```, ```int*```)
+
+```cpp
+#include <iostream>
+#include <thread>
+
+int counter = 0;  // Shared variable (not thread-safe)
+
+void increment() {
+    for (int i = 0; i < 100000; ++i) {
+        ++counter;  // Data race! Multiple threads modify 'counter'
+    }
+}
+
+int main() {
+    std::thread t1(increment);
+    std::thread t2(increment);
+
+    t1.join();
+    t2.join();
+
+    std::cout << "Counter: " << counter << "\n";  // Undefined result!
+    return 0;
+}
+```
+
+```cpp
+#include <iostream>
+#include <thread>
+#include <atomic>
+
+std::atomic<int> counter(0);  // Atomic counter (thread-safe)
+
+void increment() {
+    for (int i = 0; i < 100000; ++i) {
+        ++counter;  // Atomic increment
+    }
+}
+
+int main() {
+    std::thread t1(increment);
+    std::thread t2(increment);
+
+    t1.join();
+    t2.join();
+
+    std::cout << "Counter: " << counter << "\n";  // Always 200000
+    return 0;
+}
+```
+
+#### Atomic Operations
+
+| Operation | Example |
+|-|-|
+| Load Value | ```x.load()``` |
+| Store Value | ```x.store()``` |
+| Fetch and add | ```fetch_add()``` |
+| Fetch and substract | ```fetch_sub()``` |
+| Compare and Swap | ```x.compare_exchange_strong(expected, new_value)``` |
+
+#### When to use ```std::atomic``` vs ```std::mutex```
+
+| Feature | ```std::atomic``` | ```std::mutex``` |
+|-|-|-|
+| Prevents Data Race | Yes | Yes |
+| Performance | Fast (Lock Free) | Slower (locking) |
+| Works on complex data types | No | Yes |
+| Works on simpler variables | Yes | Yes |
+
+- Use ```std::atomic``` for simple numeric or pointer variables
+- Use ```std::mutex``` for Complex Objects (data structures)
+
+## Condition variable
+
+- is used for synchronization between threads
+- it allows threads to wait for a particular condition to become true
+- used with ```std::mutex``` and ```std::unique_lock```
+- requires ```<condition_variable>```
+- method:
+    1. boolean - variable for notifying
+    2. lock - ```std::unique_lock``` - common lock(```std::mutex``` - variable)
+    3. std::condition_variable - that will stop the reporter thread
+    4. 2 ```std::thread```s - worker/reporter
+
+```cpp
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+
+std::mutex gLock;
+std::condition_variable gConditionVariable;
+
+int main() {
+
+    int result = 0;
+    bool notified = false;
+
+    // reporting thread
+    // must wait on work, done by working thread
+    std::thread reporter([&](){
+        std::unique_lock<std::mutex> lock(gLock);
+
+        if(!notified){
+            gConditionVariable.wait(lock);
+        }
+
+        std::cout << "Reporter: result is: " << result << std::endl;
+
+    });
+
+    // working thread
+    std::thread worker([&](){
+        std::unique_lock<std::mutex> lock(gLock);
+        // do our work, lock stays
+
+        result = 42 + 1 + 7;
+        // work is done
+        notified = true;
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        std::cout << "Work is complete" << std::endl;
+        // wake up a thread that is waiting for some condition
+        gConditionVariable.notify_one();
+    });
+
+    // joining threads
+    reporter.join();
+    worker.join();
+
+    std::cout << "Program Complete" << std::endl;
+
+    return 0;
+}
+```
+
+## ```std::async``` and ```std::future```
+
+- ```async``` - without synchronization
+- requires ```<future>```
+
+```cpp
+#include <iostream>
+#include <future>
+
+int square(int x){
+    return x * x;
+}
+
+// form std::future<type of the result>
+int main(){
+
+    std::future<int> asyncFunction = std::async(&square, 12);
+
+    // the thread is blocked at the .get() operation until
+    // the result is computed
+    int result = asyncFunction.get();
+
+    std::cout << "Result is: " << result << std::endl;
+
+    return 0;
+}
+```
+
+### What is ```std::future```
+
+- represents a future result that will be available after an asynchronous operation completes
+- operations are launched with ```std::async(&function, parameters)```
+- Features
+    1. Can check if result is ready using ```.wait()``` or ```.wait_for()```
+    2. can retrieve result using ```.get()```
+    3. Supports exceptions - will be rethrown by ```.get()```
+
+### What is ```std::async```
+
+- launches a function asynchronously
+- returns ```std::future<T>```
+
+### Example of ```std::async``` with background thread loading data
+
+```cpp
+#include <iostream>
+#include <future>
+
+bool bufferFileLoader(){
+    size_t bytes = 0;
+    while(bytes < 10000){
+        std::cout << "Thread: " << bytes << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        bytes += 1000;
+    }
+
+
+    // by default
+    return true;
+}
+
+int main(){
+
+    std::future<bool> backgroundThread = std::async(std::launch::async, bufferFileLoader);
+
+    // enum type
+    std::future_status status;
+
+    /*
+    future_status{
+        deferred
+        ready
+        timeout
+    }
+    */
+
+    // main program loop
+
+    while(true){
+        std::cout << "Main thread is running " << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        // waits for the result for a specified duration
+        status = backgroundThread.wait_for(std::chrono::milliseconds(1));
+
+        if(status == std::future_status::ready){
+            break;
+        }
+    }
+
+
+    return 0;
+}
+```
+
+## ```std::try_lock```
+
+- function that attempts locking a mutex without blocking
+- unlike ```lock()```, it immediately returns whether the locking was successful
+
+```cpp
+#include <iostream>
+#include <future>
+#include <mutex>
+#include <thread>
+
+// either job1, or job2 is executed, not both
+std::mutex mtx;
+void job1(){
+    if(mtx.try_lock()){
+        std::cout << "Job1" << std::endl;
+        mtx.unlock();
+    }
+}
+void job2(){
+    if(mtx.try_lock()){
+        std::cout << "Job2" << std::endl;
+        mtx.unlock();
+    }
+}
+
+int main(){
+    
+    std::thread thread1(job2);
+    std::thread thread2(job1);
+    
+    thread1.join();
+    thread2.join();
+
+    return 0;
+}
+```

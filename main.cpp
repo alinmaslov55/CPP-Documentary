@@ -1,30 +1,29 @@
 #include <iostream>
-#include <thread>
-#include <vector>
+#include <future>
 #include <mutex>
-
+#include <thread>
 
 std::mutex mtx;
-static int data = 0;
-void func(){
-    std::lock_guard<std::mutex> lock(mtx);
-
-    data = data + 1;
-
+void job1(){
+    if(mtx.try_lock()){
+        std::cout << "Job1" << std::endl;
+        mtx.unlock();
+    }
 }
+void job2(){
+    if(mtx.try_lock()){
+        std::cout << "Job2" << std::endl;
+        mtx.unlock();
+    }
+}
+
 int main(){
-
-    std::vector<std::thread> threads;
-
-    for(int i = 0; i < 100; i++){
-        threads.emplace_back(func);
-    }
-
-    for(int i = 0; i < 100; i++){
-        threads[i].join();
-    }
-
-    std::cout << "data = " << data << std::endl;
     
+    std::thread thread1(job2);
+    std::thread thread2(job1);
+    
+    thread1.join();
+    thread2.join();
+
     return 0;
 }
