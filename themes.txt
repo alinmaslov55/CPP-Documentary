@@ -1,9 +1,0 @@
-To include:
-Threads
-
-
-Understand class variable size
-Operator Overloading - to implement something
-
-To do:
-- implement Singleton
