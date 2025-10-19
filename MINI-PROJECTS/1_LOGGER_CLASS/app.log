@@ -1,0 +1,4 @@
+[2025-10-19 21:57:30.005] [INFO] [Thread 125347654920064] Application started
+[2025-10-19 21:57:30.005] [DEBUG] [Thread 125347654920064] This is a debug message
+[2025-10-19 21:57:30.005] [WARNING] [Thread 125347654920064] This is a warning message
+[2025-10-19 21:57:30.005] [ERROR] [Thread 125347654920064] This is an error message

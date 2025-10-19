@@ -1,5 +1,8 @@
 # Google Test
 
+## Exemplu de structura proiect cu GTest
+
+
 #exrcise
 
 1. Crearea unei clase templetizate
